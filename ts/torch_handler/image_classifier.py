@@ -72,8 +72,8 @@ class ImageClassifier(VisionHandler):
         probs, classes = (e.cpu().data.numpy().squeeze().tolist() for e in data)
 
         # handle case when output has only one class
-        if (type(probs) != list):
-            probs = [probs]
+        if (isinstance(probs, list)):
+            probs = [probs] 
             classes = [classes]
 
         results = []
