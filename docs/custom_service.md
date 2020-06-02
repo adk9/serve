@@ -15,6 +15,7 @@ Provide a custom script to:
 * [Example Custom Service file](#example-custom-service-file)
 * [Creating model archive with entry point](#creating-model-archive-with-entry-point)
 * [Handling model execution on GPU](#handling-model-execution-on-multiple-gpus)
+* [Extending default handlers in custom handler](#Extending-default-handlers-in-custom-handler)
 
 ## Requirements for custom service file
 
@@ -155,6 +156,58 @@ class ModelHandler(object):
 ```
 
 ** For more details refer [mnist digit classifier handler](../examples/image_classifier/mnist/mnist_handler.py) **
+
+## Extending default handlers in custom handler
+
+Torchserve comes with the following default handlers out of the box.
+- base_handler
+- image_classifier
+- object_detector
+- text_classifier
+- text_handler
+These handlers can be extended in a custom handler and default handler code can be reused.
+To import the default handler in a python script using the following import statement.
+`from ts.torch_handler.<default_handler_name> import <DefaultHandlerClass>`
+
+The following code shows an example of custom service with extended default handler.
+```python
+from ts.torch_handler.image_classifier import ImageClassifier
+
+ Extending default handlers in custom handler
+class CustomImage(ImageClassifier):
+
+    def inference(self, model_input):
+        """
+        Internal inference methods
+        :param model_input: transformed model input data
+        :return: list of inference output in NDArray
+        """
+        # Do some inference call to engine here and return output
+        return None
+
+
+_service = CustomImage()
+
+
+def handle(data, context):
+    """
+    Entry point for custom image classifier handler
+    """
+    if not _service.initialized:
+        _service.initialize(context)
+
+    if data is None:
+        return None
+
+    data = _service.preprocess(data)
+    data = _service.inference(data)
+    data = _service.postprocess(data)
+
+    return data
+```
+For more details refer following examples :
+- [mnist digit classifier handler](../examples/image_classifier/mnist/mnist_handler.py)
+- [resnet-152-batch_image classifier handler](../examples/image_classifier/resnet_152_batch/resnet152_handler.py) 
 
 ## Creating a model archive with an entry point
 

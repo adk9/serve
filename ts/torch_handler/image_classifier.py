@@ -59,17 +59,17 @@ class ImageClassifier(VisionHandler):
 
         inputs = Variable(data).to(self.device)
         outputs = self.model.forward(inputs)
-        ps = F.softmax(outputs, dim=1)
+        return outputs
+
+    def postprocess(self, data):
+        ps = F.softmax(data, dim=1)
         output_tensor = getattr(ps, self.device.type)()
 
         # output_tensor size -> [ m, n ] where n is number of clases
         topk = min(self.get_max_result_classes(), list(output_tensor.size())[1])
         topk = output_tensor.topk(topk)
 
-        return topk
-
-    def postprocess(self, data):
-        probs, classes = (e.cpu().data.numpy().squeeze().tolist() for e in data)
+        probs, classes = (e.cpu().data.numpy().squeeze().tolist() for e in topk)
 
         # handle case when output has only one class
         if not isinstance(probs, list):
